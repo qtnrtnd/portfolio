@@ -1,0 +1,30 @@
+{
+  "name": "portfolio",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "copy-assets": "cpr ./src/parcel-ignore/ ./temp/",
+    "serve": "rimraf temp && npm run copy-assets && parcel src/index.html --dist-dir temp",
+    "build": "rimraf docs && parcel build src/index.html --dist-dir docs --public-url . && npm run copy-assets"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@parcel/transformer-sass": "^2.3.2",
+    "parcel": "^2.3.2",
+    "parcel-resolver-ignore": "^2.1.1",
+    "postcss": "^8.4.13",
+    "postcss-modules": "^4.3.1",
+    "postcss-plugin": "^1.0.0",
+    "postcss-preset-env": "^7.4.1",
+    "rimraf": "^3.0.2"
+  },
+  "dependencies": {
+    "cpr": "^3.0.1",
+    "webfontloader": "^1.6.28"
+  },
+  "parcelIgnore": [
+    "Hyphenopoly_Loader.js"
+  ]
+}

@@ -1,0 +1,62 @@
+@use "./modules/abstract/fontface";
+@use "./modules/abstract/var" as var;
+
+@use "./modules/base/_normalize.css";
+
+@use "./modules/layout/header";
+@use "./modules/layout/section_landing";
+@use "./modules/layout/section_about";
+@use "./modules/layout/nav";
+
+@use "./modules/components/fluo_text";
+@use "./modules/components/circled_text";
+@use "./modules/components/underlined_text";
+
+body, #smooth-content{
+    background-color: var(--white);
+}
+
+body{
+    font-family: "Inter", Arial, Helvetica, sans-serif;
+    
+    /*&:after{
+        position: absolute;
+        top: 0;
+        left: 0;
+        //content: "";
+        background-image: url("../img/layer.png");
+        width: 100%;
+        height: 100vh;
+        background-position: center;
+        background-size: contain;
+        background-repeat: no-repeat;
+        pointer-events: none;
+        opacity: 0.25;
+    }*/
+}
+
+img, svg{
+    user-select: none;
+}
+
+#smooth-wrapper, header{
+    padding: 0 var(--padding);
+}
+
+.navigation{
+    margin-left: var(--padding);
+}
+
+section:first-child{
+    padding-top: var(--header-height);
+}
+
+.hidden{
+    visibility: hidden;
+}
+
+.hyphen{
+    -webkit-hyphens: auto;
+    -ms-hyphens: auto;
+    hyphens: auto;
+}

@@ -1,0 +1,13 @@
+Header: réseaux sociaux
+
+1ère section: Prénom - nom - phrase d'accroche
+    phrase d'accroche : 
+
+2ème section: animation de moi en dessin vers moi en photo
+
+3ème section: description de moi même, ma formation, mes objectifs, mes centres d'intérêts
+    
+
+4ème section: projets (miniatures + description STAR, date)
+
+5ème section: formulaire de contact + lien CV

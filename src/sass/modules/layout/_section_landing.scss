@@ -1,0 +1,121 @@
+.section-landing{
+
+    position: relative;
+
+    height: var(--inner-height);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    padding-bottom: calc(var(--header-height) / 1.5);
+
+    //margin-bottom: calc(var(--inner-height) / 4);
+
+    .img-container{
+        position: absolute;
+
+        overflow: hidden;
+
+        img{
+            height: 100%;
+            /*transform-origin: center;
+            transform: scale(1.2);*/
+        }
+    }
+
+    .img-myself{
+        left: 13%;
+        bottom: 6.5%;
+        height: 37rem;
+    }
+
+    .img-texture{
+        right: 14%;
+        top: 5.5%;
+        height: 29.5rem;
+        z-index: -1;
+    }
+
+   .big-name{
+
+        display: flex;
+        flex-direction: column;
+
+        //margin-top: 0.25rem;
+
+        svg, img{
+            $height: 12.45rem;
+
+            &:nth-child(1){
+                height: $height * 1.085;
+                align-self: flex-start;
+                margin-bottom: 0.3rem;
+                transform: translate3d(-0.8%, 0, 0);
+            }
+
+            &:nth-child(2){
+                height: $height;
+                align-self: flex-end;
+            }
+        }
+
+        &.overlay{
+            position: absolute;
+            top: 0;
+            left: 0;
+            margin-left: calc(-1 * var(--padding));
+            padding: 0 var(--padding);
+            padding-top: var(--header-height);
+            z-index: 1;
+            //background-color: red;
+            width: calc(100% + 2 * var(--padding));
+
+            img:first-child{
+                transform: scale(1.3) translate3d(-0.8%, 0, 0);
+            }
+    
+            img:nth-child(2){
+                transform: scale(1.3);
+    
+            }
+        }
+
+        &.mix-screen{
+            mix-blend-mode: screen;
+        }
+
+        &.mix-overlay{
+            mix-blend-mode: overlay;
+            opacity: 0.75;
+        }
+
+        &.mix-normal{
+            opacity: 0.25;
+        }
+   }
+
+   .slogan{
+       font-size: var(--font-medium);
+       line-height: 100%;
+
+       .slogan-line{
+           display: flex;
+
+           &:nth-child(2){
+               hr{
+                position: relative;
+                top: 1px;
+               }
+           }
+
+           hr{
+
+                flex: 1;
+                align-self: flex-end;
+                transform: translate3d(0, -0.15em, 0);
+                margin-right: calc(var(--header-height) / 3);
+           }
+       }
+   }
+}

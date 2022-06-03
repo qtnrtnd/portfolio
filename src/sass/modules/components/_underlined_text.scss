@@ -1,0 +1,78 @@
+.section-about{
+
+    [class*="line"]{
+
+        mix-blend-mode: multiply;
+
+        &:after{
+            content: "";
+            z-index: -1;
+            position: absolute;
+            pointer-events: none;
+            width: 100%;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background-position-x: left;
+            background-size: auto 100%;
+            background-repeat: no-repeat;
+            clip-path: inset(0 100% 0 0);
+            transition: clip-path 1s cubic-bezier(0.26, 0.11, 0.27, 0.99);
+        }
+    
+        &.highlighted:after{
+            clip-path: inset(0 0 0 0);
+        }
+    }
+
+    .line1{
+       
+        &:after{
+            content: "";
+            height: 0.5em;
+            background-image: linear-gradient(90deg, white, transparent 0.07em, transparent calc(100% - 0.07em), white),
+            url("../img/line-1.png");
+            transform: translateY(-40%) rotate(-1deg);
+        }
+
+    }
+
+    .line2{
+       
+        &:after{
+            content: "";
+            height: 0.45em;
+            background-image: linear-gradient(90deg, white, transparent 0.07em, transparent calc(100% - 0.07em), white),
+            url("../img/line-2.png");
+            transform: translateY(-30%) rotate(2deg);
+        }
+
+    }
+
+    .line3{
+       
+        &:after{
+            content: "";
+            height: 0.45em;
+            background-position: center;
+            background-image: linear-gradient(90deg, white, transparent 0.07em, transparent calc(100% - 0.07em), white),
+            url("../img/line-3.png");
+            transform: translateY(-45%);
+        }
+
+    }
+
+    .line4{
+       
+        &:after{
+            content: "";
+            height: 0.55em;
+            background-position: left;
+            background-image: linear-gradient(90deg, white, transparent 0.07em, transparent calc(100% - 0.07em), white),
+            url("../img/line-4.png");
+            transform: translateY(-50%) rotate(2deg);
+        }
+
+    }
+    
+}
