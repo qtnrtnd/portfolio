@@ -1,62 +1,68 @@
-import gsap from "./library/gsap-latest-beta.min";
+import gsap from "./library/gsap.min.js";
 import ScrollTrigger from "./library/ScrollTrigger.min";
 import ScrollSmoother from "./library/ScrollSmoother.min";
 
 import g from "./modules/global";
 import DOM from "./modules/dom_var";
 import loadContent from "./modules/load_content";
-import setLettersLag from "./modules/letters_lag_effect";
 import nav from "./modules/nav";
+import { getFullScreenCircleRadius, getOffset, innerHeight } from "./modules/utils.js";
 
 export default async function start() {
 
-  const images = await loadContent();
+  window.history.scrollRestoration = "manual";
 
-  setLettersLag();
+  await loadContent();
 
   gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
   const smoother = ScrollSmoother.create({
-    smooth: 1.3,
+    smooth: 1.5,
     effects: true,
     smoothTouch: 0.1,
     onUpdate: self => {
 
       if (self.scrollTrigger) {
 
-        DOM.forcedSpeedElements.forEach(elt => {
+        const scrollVelocity = self.getVelocity();
+        const scrollTop = self.scrollTop();
+
+        DOM.rowIllustrations.forEach(elt => {
+          if (ScrollTrigger.isInViewport(elt)) elt.style.transform = `scaleX(${1 - Math.abs(scrollVelocity / 20_000)}) skewX(${scrollVelocity / 325}deg)`;
+        });
+
+        DOM.actionSentences.forEach((elt, id)=> {
 
           if (ScrollTrigger.isInViewport(elt)) {
 
-            if (!elt.style.willChange) elt.style.willChange = "transform";
+            elt.style.removeProperty('visibility');
 
-            const speed = elt.dataset.forcedSpeed - 1;
-            const maxTranslate = self.scrollTrigger.end * speed * -1;
-  
-            elt.style.transform = `translate(0, ${(self.scrollTop() / self.scrollTrigger.end) * maxTranslate}px)`;
+            const trigger = g.actionSentenceTriggers[id];
+            let displacementIntensity;
+            const offset = 200;
 
-          }
-        })
-      } 
+            if (id === 0 && scrollTop < trigger.start || scrollTop >= trigger.start && scrollTop <= trigger.end) {
+
+              displacementIntensity = 0;
+              
+            }else if (scrollTop < trigger.start) {
+
+              displacementIntensity =  Math.min(1 - (scrollTop - (trigger.start - offset)) / offset, 1);
+
+            } else {
+
+              displacementIntensity = Math.min((scrollTop - trigger.end) / offset, 1);
+            }
+          
+            DOM.displacementMaps[id].scale.baseVal = Math.round((scrollVelocity / 25) * displacementIntensity * 10) / 10;
+
+          } else {
+            elt.style.visibility = "hidden";
+          }        
+        });
+      }
     }
   });
-
-  const setNameOverlayClipPath = function () {
-
-    const imgRect = DOM.imgMyself.getBoundingClientRect();
-    const left = imgRect.left;
-    const right = document.body.offsetWidth - (left + imgRect.width);
-
-    DOM.nameOverlays.forEach(overlay => {
-      overlay.style.clipPath = `inset(0 ${right}px 0 ${left}px)`;
-    })
-
-  }
-  setNameOverlayClipPath();
-
-  window.addEventListener('resize', function () {
-    setNameOverlayClipPath();
-  })
 
   document.querySelectorAll("a[href*='#']").forEach(a => {
     a.addEventListener('click', function (e) {
@@ -71,8 +77,8 @@ export default async function start() {
     });
   });
 
-  document.addEventListener('wheel', () => { if(g.isAutoScrolling) g.isAutoScrolling = false });
-
+  document.addEventListener('wheel', () => { if (g.isAutoScrolling) g.isAutoScrolling = false });
+  
   // nav "home" update
   ScrollTrigger.create({
     trigger: ".section-about",
@@ -86,57 +92,90 @@ export default async function start() {
     }
   });
 
-  // "I" visible
-  ScrollTrigger.create({
+  // ".section-about" pinned
+  const sectionAboutPinTrigger = ScrollTrigger.create({
     trigger: ".section-about",
-    start: "top 75%",
-    onEnter: () => {
-      DOM.iStylized.classList.add('visible');
+    start: "top",
+    end: `+=${g.SECTION_ABOUT_PIN_HEIGHT}px`,
+    pin: ".section-about"
+  });
+
+  const TEXT_STRIP_END_TRESHOLD = 1.2;
+  const CLIP_PATH_REVEAL_OVERLAP_TRESHOLD = 0.75;
+  const textStripsTimeline = gsap.timeline({paused: true});
+
+  DOM.textStrips.forEach(textStrip => {
+
+    const delay = textStrip.dataset.delay ? textStrip.dataset.delay : 0;
+
+    textStripsTimeline.to(textStrip, {
+      x: (Array.from(textStrip.parentElement.classList).some(v => ["right", "bottom"].includes(v)) ? -1 : 1) * (textStrip.offsetWidth + Math.sqrt(Math.pow(window.innerWidth, 2) + Math.pow(innerHeight(), 2))),
+      duration: 100
+    }, delay);
+
+  })
+
+  // ".text-strips" animation
+  const textStripsAnimationTrigger = ScrollTrigger.create({
+    trigger: ".section-about",
+    start: "top top+=75%",
+    end: () => sectionAboutPinTrigger.start + g.SECTION_ABOUT_PIN_HEIGHT * TEXT_STRIP_END_TRESHOLD,
+    scrub: true,
+    animation: textStripsTimeline,
+    toggleClass: { targets: DOM.textStripsWrapper, className: 'visible' }
+  })
+
+  // ".section-about-clip-path" reveal
+  const clipPathRevealTrigger = ScrollTrigger.create({
+    trigger: ".section-about",
+    start: () => sectionAboutPinTrigger.start + g.SECTION_ABOUT_PIN_HEIGHT * (TEXT_STRIP_END_TRESHOLD - CLIP_PATH_REVEAL_OVERLAP_TRESHOLD),
+    end: () => sectionAboutPinTrigger.end,
+    onUpdate: self => {
+      const r = getFullScreenCircleRadius() * self.progress;
+      DOM.sectionAboutClip.style.clipPath = `circle(${r}px at 50% calc(var(--inner-height) / 2))`;
+      DOM.sectionAboutContent.style.transform = `scale(${0.8 + self.progress * 0.2})`;
+    },
+    onEnter: function () {
+      DOM.sectionAboutClip.style.removeProperty('visibility');
+    },
+    onLeave: function () {
+      DOM.sectionAboutClip.style.removeProperty('clip-path');
+      smoother.content().style.removeProperty('background-color');
     }
   });
+
+  // background color transition
+  ScrollTrigger.create({
+    trigger: ".section-about",
+    start: () => textStripsAnimationTrigger.start,
+    end: () => clipPathRevealTrigger.start,
+    onUpdate: self => {
+      const r = getFullScreenCircleRadius() * self.progress;
+      DOM.backgroundCircle.style.backgroundImage = `radial-gradient(circle at center, ${g.COLOR_SWITCH_LANDING} ${self.progress * 100 - 0.1}%, transparent ${self.progress * 100}%)`;
+    }
+  })
 
   // "I" pinned + first paragraph appear
   ScrollTrigger.create({
     trigger: ".section-about",
-    start: "top",
-    end: "bottom",
-    pin: ".i-stylized-container",
-    onEnter: () => {
-      DOM.explanationSentences[0].classList.add('visible');
-    }
+    start: () => sectionAboutPinTrigger.end,
+    end: () => getOffset(DOM.explanationSentences.at(-1)).top + DOM.explanationSentences.at(-1).offsetHeight - innerHeight() / 2 - DOM.actionSentences.at(-1).offsetHeight / 2 + g.SECTION_ABOUT_PIN_HEIGHT,
+    pin: ".i-stylized-wrapper",
+    pinnedContainer: ".section-about"
   });
 
-  // second paragraph appear
-  ScrollTrigger.create({
-    trigger: ".section-about",
-    start: "top 35%",
-    onEnter: () => {
-      DOM.actionSentences[0].classList.add('visible');
-    }
-  });
+  DOM.textContentRows.forEach((row, i) => {
 
-  const setTriggerState = (currentRow, enable) => {
-    smoother.effects().forEach(effect => {
-      if (effect.trigger.tagName.toLowerCase() === "i" && effect.trigger.closest(".section-about-text-content-row") === currentRow) {
-        enable ? effect.enable() : effect.disable(true, true);
-      }
-    })
-  }
-
-  DOM.textContentRows.forEach(row => {
-
-    const actionSentence = row.querySelector('.action-sentence');
-
-    const pinnedPosition = () => `top ${Math.max(g.MIN_HEIGHT, window.innerHeight) / 2 - actionSentence.offsetHeight / 2}px`;
+    const actionSentence = DOM.actionSentences[i];
 
     // text fade from viewport bottom
     ScrollTrigger.create({
-      //markers: true,
       trigger: row,
       start: "top 97%",
       end: "top 60%",
       scrub: true,
       ease: "none",
+      pinnedContainer: ".section-about",
       animation: gsap.fromTo(row, {
         opacity: 0.1
       }, {
@@ -146,12 +185,12 @@ export default async function start() {
 
     // text fade to viewport top
     ScrollTrigger.create({
-      //markers: true,
       trigger: row,
       start: "bottom 23%",
       end: "bottom",
       scrub: true,
       ease: "none",
+      pinnedContainer: ".section-about",
       animation: gsap.fromTo(row, {
         opacity: 1
       }, {
@@ -159,141 +198,75 @@ export default async function start() {
       })
     });
 
-    const id = row.getAttribute('id');
+    ScrollTrigger.create({
+      trigger: row,
+      start: "top bottom",
+      pinnedContainer: ".section-about",
+      onLeaveBack: () => {
+        row.querySelectorAll('.highlighted').forEach(word => {
+          word.style.transition = "none";
+          word.classList.remove('highlighted');
+          word.offsetHeight;
+          word.style.removeProperty('transition');
+        })
+      }
+    });
+
+
+    const rowId = row.getAttribute('id');
 
     // action sentence pin + temp letters lag diable
-    ScrollTrigger.create({
-      fastScrollEnd: true,
-      id: id,
+    const trigger = ScrollTrigger.create({
+      id: rowId,
       trigger: row,
-      start: pinnedPosition,
-      end: () => `+=${row.offsetHeight - actionSentence.offsetHeight}px`,
+      start: () => i === 0 ? sectionAboutPinTrigger.end : `top ${ innerHeight() / 2 - actionSentence.offsetHeight / 2 }px`,
+      end: () => `+=${ row.offsetHeight - actionSentence.offsetHeight }px`,
       pin: actionSentence,
+      pinnedContainer: ".section-about",
       onEnter: () => {
-        if(!g.isAutoScrolling) nav.update(id);
-        setTriggerState(row, false);
+        if (!g.isAutoScrolling) nav.update(rowId);
       },
       onEnterBack: () => {
-        if(!g.isAutoScrolling) nav.update(id);
-        setTriggerState(row, false);
-      },
-      onLeave: () => {
-        setTriggerState(row, true);
-      },
-      onLeaveBack: () => {
-        setTriggerState(row, true);
+        if (!g.isAutoScrolling) nav.update(rowId);
+      }
+    });
+    g.actionSentenceTriggers.push(trigger);
+  });
+
+  DOM.highlightedWords.forEach(word => {
+    ScrollTrigger.create({
+      trigger: word,
+      start: "top 55%",
+      pinnedContainer: ".section-about",
+      onEnter: () => {
+        word.classList.add('highlighted');
       }
     });
   });
 
-  const getConicGradientMask = function (angle) {
-    return `conic-gradient(transparent, transparent ${angle}deg, white ${angle ? Math.min(angle + 6, 360) : 0}deg, white)`
-  }
+  ScrollTrigger.addEventListener("refresh", () => {
 
-  const circleDrawingEase = gsap.parseEase("power2.inOut");
+    const imgRect = DOM.imgMyself.getBoundingClientRect();
+    const left = imgRect.left;
+    const right = document.body.offsetWidth - (left + imgRect.width);
 
-  DOM.highlightedWords.forEach(word => {
-
-    const params = {
-      trigger: word,
-      start: "top 55%"
-    };
-
-    const className = Array.from(word.classList).find(className => {
-      return className.includes('circle');
+    DOM.nameOverlays.forEach(overlay => {
+      overlay.style.clipPath = `inset(0 ${right}px 0 ${left}px)`;
     })
 
-    if (className) {
+    DOM.textContentRows[0].style.marginTop = "-" + DOM.actionSentences[0].offsetHeight / 2 + "px";
 
-      let rotate = 0,
-        translateX = 0,
-        translateY = 0,
-        scaleY = 1;
+    DOM.backgroundCircle.style.width = DOM.backgroundCircle.style.height = getFullScreenCircleRadius() * 2 + "px";
 
-      if (word.dataset.transform) {
-        const arr = word.dataset.transform.split(' ');
-        translateX = Math.round(arr[0] / g.REM_SIZE * 100) / 100;
-        translateY = Math.round(arr[1] / g.REM_SIZE * 100) / 100;
-        rotate = arr[2];
-        scaleY = arr[3];
-        word.removeAttribute('data-transform');
+    smoother.effects().forEach(effect => {
+
+      if (effect.trigger.classList.contains('permanent-effect')) {
+        effect.setPositions(0, ScrollTrigger.maxScroll(window));
+      } else if (effect.trigger.classList.contains('row-illustration')) {
+        effect.setPositions(effect.start + g.SECTION_ABOUT_PIN_HEIGHT, effect.end + g.SECTION_ABOUT_PIN_HEIGHT);
       }
 
-      const textContent = word.innerHTML;
-      word.innerHTML = '';
-
-      const textStretchWrapper = document.createElement('span');
-      textStretchWrapper.classList.add('text-stretch-wrapper');
-      textStretchWrapper.innerHTML = textContent;
-
-      const gradientMask = document.createElement('span');
-      gradientMask.classList.add('gradient-mask');
-      gradientMask.style.backgroundImage = getConicGradientMask(0);
-
-      const relativeWrapper = document.createElement('span');
-      relativeWrapper.classList.add('relative-wrapper');
-
-      const imgStretchWrapper = document.createElement('span');
-      imgStretchWrapper.classList.add('img-stretch-wrapper');
-
-      const imgWrapper = document.createElement('span');
-      imgWrapper.classList.add('img-wrapper');
-
-      const img = images[className].cloneNode();
-
-      imgStretchWrapper.append(img);
-      imgWrapper.append(imgStretchWrapper);
-
-      relativeWrapper.append(imgWrapper);
-      relativeWrapper.append(gradientMask);
-
-      const unstretchWrapper = document.createElement('span');
-      unstretchWrapper.classList.add('unstretch-wrapper');
-
-      relativeWrapper.append(textStretchWrapper);
-      unstretchWrapper.append(relativeWrapper);
-      word.append(unstretchWrapper);
-
-      const textStretch = Math.round(textStretchWrapper.offsetWidth / textStretchWrapper.offsetHeight * 100) / 100;
-
-      imgWrapper.style.height = Math.max(Math.min(((1 / Math.pow(textStretch * 2, 0.6)) * 500), 170), 150) + "%";
-      //imgWrapper.style.height = `calc(100% + ${Math.min(((1 / Math.pow(textStretch * 2, 0.6)) * 1.9), 180)}em)`;
-      imgWrapper.style.width = `calc(100% + ${Math.min((Math.pow(textStretch * 0.7, 1.5) * 0.25), 1.5)}em)`;
-
-      imgStretchWrapper.style.transform = `scaleY(${textStretch})`;
-
-      textStretchWrapper.style.transform = `scaleY(${textStretch * (1 / scaleY)})${translateX ? ` translateX(${translateX * -1}rem)` : ''}${translateY ? `translateY(${translateY * -1}rem)` : ''}${rotate ? ` rotate(${rotate * -1}deg)` : ''}`;
-      
-      const imgRect = imgStretchWrapper.getBoundingClientRect();
-      
-      gradientMask.style.width = Math.round((imgRect.width * 2) / g.REM_SIZE * 100) / 100 + "rem";
-      gradientMask.style.height = Math.round((imgRect.height * 2) / g.REM_SIZE * 100) / 100 + "rem";
-      
-      unstretchWrapper.style.transform = `scaleY(${Math.round((1 / textStretch) * scaleY * 100) / 100})`;
-
-      word.style.transform = `${translateX ? `translateX(${translateX}rem)` : ''}${translateY ? `translateY(${translateY}rem)` : ''}${rotate ? ` rotate(${rotate}deg)` : ''}`;
-
-      params.animation = gsap.to({ p: 0 }, {
-        p: 1,
-        duration: 1,
-        paused: true,
-        onUpdate: function () {
-          const angle = circleDrawingEase(this.progress()) * 360;
-          gradientMask.style.backgroundImage = getConicGradientMask(angle);
-        }
-      });
-
-    } else {
-
-      params.onEnter = () => {
-        word.classList.add('highlighted');
-      }
-
-    }
-
-    ScrollTrigger.create(params);
+    })
   });
-
-  ScrollTrigger.refresh();
   
 }

@@ -4,16 +4,13 @@
         z-index: -1;
         position: absolute;
         pointer-events: none;
-        width: calc(100% + 0.4em);
+        width: calc(100% + 0.3em);
         height: 65%;
         top: 50%;
         left: 50%;
         transform-origin: left;
         transform: translate(-50%, -50%) scaleX(0);
-        background-color: #c5f1d3;
-        //background-color: #49de7a;
-        //opacity: 0.3;
-        //mix-blend-mode: hard-light;
+        background-color: #d7f8e0;
         transition: transform 0.6s cubic-bezier(0.26, 0.11, 0.27, 0.99);
     }
 

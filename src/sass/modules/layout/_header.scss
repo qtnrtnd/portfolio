@@ -1,25 +1,32 @@
 header{
+    
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 999;
-    height: var(--header-height);
-    width: 100%;
     display: flex;
     align-items: center;
-
-    .logo{
-        font-size: 1.25rem;
-        font-weight: 900;
-    }
+    width: 100%;
+    height: var(--header-height);
+    z-index: 999;
+    mix-blend-mode: difference;
 
     hr{
         flex: 1;
         margin: 0 calc(var(--header-height) / 3);
         position: relative;
         top: -1px;
+        background-color: white;
     }
 
+    .logo{
+        color: transparent;
+        background-clip: text;
+        -webkit-background-clip: text;
+        background-color: white;
+        font-size: 1.25rem;
+        font-weight: 900;
+    }
+    
     .social{
         display: flex;
 
@@ -29,18 +36,16 @@ header{
             &:nth-child(2){
                 margin: 0 calc(var(--header-height) / 4);
             }
+        }    
 
-            a{
-
-                img{
-                    height: 1.3rem;
-                    transition: filter .3s;
-                }
-
-                &:hover img{
-                    filter: contrast(0.35);
-                }
-            }
+        a:hover img{
+            opacity: 0.7;
         }
+
+        img{
+            transition: opacity .3s;
+            height: 1.3rem;
+        }
+
     }
 }

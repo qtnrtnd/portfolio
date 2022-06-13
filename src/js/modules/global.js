@@ -14,7 +14,12 @@ const g = {
         return fontSize;
         
     })(),
-    isAutoScrolling: false
+    isAutoScrolling: false,
+    actionSentenceTriggers: [],
+    SECTION_ABOUT_PIN_HEIGHT: 0,
+    COLOR_SWITCH_LANDING: "#292929"
 };
+
+g.SECTION_ABOUT_PIN_HEIGHT = g.MIN_HEIGHT * 2;
 
 export default g;

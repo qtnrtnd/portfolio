@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "copy-assets": "cpr ./src/parcel-ignore/ ./temp/",
-    "serve": "rimraf temp && npm run copy-assets && parcel src/index.html --dist-dir temp",
-    "build": "rimraf docs && parcel build src/index.html --dist-dir docs --public-url . && npm run copy-assets"
+    "copy-assets": "cpr ./src/parcel-ignore/ ./docs/",
+    "serve": "rimraf temp && cpr ./src/parcel-ignore/ ./temp/ && parcel src/index.html --dist-dir temp",
+    "build": "rimraf docs && parcel build src/index.html --dist-dir docs --public-url . && cpr ./src/parcel-ignore/ ./docs/"
   },
   "keywords": [],
   "author": "",
