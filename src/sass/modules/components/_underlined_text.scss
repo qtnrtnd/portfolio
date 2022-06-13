@@ -68,43 +68,4 @@
         }
 
     }
-
-    .line3{
-
-        &:after,
-        &:before{
-            height: 0.4em;
-        }
-
-        &:before{
-            transform: translateY(-45%);
-        }
-       
-        &:after{
-            background-position: center;
-            background-image: url("../img/line-3.png");
-            transform: translateY(-45%);
-        }
-
-    }
-
-    .line4{
-
-        &:after,
-        &:before{
-            height: 0.55em;
-        }
-
-        &:before{
-            transform: translateY(-50%);
-        }
-       
-        &:after{
-            background-position: left;
-            background-image: url("../img/line-4.png");
-            transform: translateY(-50%) rotate(2deg);
-        }
-
-    }
-    
 }
